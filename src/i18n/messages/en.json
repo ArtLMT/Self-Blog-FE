@@ -1,0 +1,39 @@
+{
+  "common": {
+    "appName": "SelfBlog",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search...",
+    "noResults": "No results found"
+  },
+  "nav": {
+    "home": "Home",
+    "blog": "Blog",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "getStarted": "Get Started",
+    "dashboard": "Dashboard"
+  },
+  "auth": {
+    "loginTitle": "Welcome back",
+    "loginDescription": "Sign in to your account to continue",
+    "registerTitle": "Create an account",
+    "registerDescription": "Start your blogging journey today",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "username": "Username"
+  },
+  "blog": {
+    "title": "Blog",
+    "readMore": "Read more",
+    "minRead": "{minutes} min read",
+    "publishedOn": "Published on {date}"
+  }
+}

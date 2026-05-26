@@ -1,81 +1,84 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { mockArcs } from '@/lib/mock-data';
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description: 'A personal archive of unfinished thoughts.',
+};
+
 export default function HomePage() {
   return (
     <main className="max-w-[720px] mx-auto px-6 pt-[96px] pb-[96px]">
+      {/* Centered Hero */}
       <header className="text-center mb-[96px] flex flex-col items-center">
-        <h1 className="font-hero-title-mobile text-[48px] leading-[1.1] font-semibold md:font-hero-title md:text-[72px] md:tracking-[-0.02em] text-primary mb-6">
+        <h1 className="font-chapter-title text-[72px] leading-[1.1] font-medium text-primary mb-6">
           Self Blog
         </h1>
-        <p className="font-body-prose text-[17px] leading-[1.85] tracking-[-0.01em] font-normal text-ink-soft max-w-[480px]">
-          a personal archive of unfinished thoughts, quiet transitions, and things that stayed.
-        </p>
+        <div className="font-body-prose text-[17px] leading-[1.85] text-foreground/90 max-w-[58ch] space-y-6">
+          <p>
+            Memory is not a ledger, but a leaky vessel. We write not to preserve the past perfectly, but to leave breadcrumbs for our future selves.
+          </p>
+          <p>
+            This space is a collection of those fragments—imperfect, quiet, and slowly settling into place.
+          </p>
+        </div>
       </header>
       
-      <section className="mb-[96px] text-center max-w-[540px] mx-auto">
-        <p className="font-body-prose text-[17px] leading-[1.85] tracking-[-0.01em] font-normal text-on-surface-variant leading-relaxed">
-          Memory is not a ledger, but a leaky vessel. We write not to preserve the past perfectly, but to leave breadcrumbs for our future selves. This space is a collection of those fragments—imperfect, quiet, and slowly settling into place.
-        </p>
+      {/* Foreword Divider */}
+      <div className="flex items-center justify-center gap-4 my-[64px]">
+        <div className="h-px bg-[var(--color-hairline)] w-16"></div>
+        <span className="small-caps text-[12px] tracking-[0.2em] text-secondary text-center shrink-0">
+          The Arcs
+        </span>
+        <div className="h-px bg-[var(--color-hairline)] w-16"></div>
+      </div>
+      
+      {/* The Arcs Directory (Left-aligned list) */}
+      <section className="flex flex-col gap-6 max-w-[58ch] mx-auto">
+        {mockArcs.map((arc) => {
+          const isActive = arc.chapters && arc.chapters.length > 0;
+          
+          if (isActive) {
+            return (
+              <Link 
+                key={arc.slug} 
+                href={`/timeline`} 
+                className="group flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[var(--color-hairline)] pb-4 transition-all duration-500 ease-out text-left"
+              >
+                <div>
+                  <h3 className="font-chapter-title text-[28px] leading-[1.3] text-foreground group-hover:text-primary transition-colors duration-500">
+                    {arc.title}
+                  </h3>
+                  <p className="font-body-prose text-[15px] text-muted-foreground mt-1 line-clamp-2">
+                    {arc.summary}
+                  </p>
+                </div>
+                <span className="small-caps text-[11px] tracking-[0.05em] text-muted-foreground shrink-0 mt-2 sm:mt-0">
+                  {new Date(arc.startDate).getFullYear()}
+                </span>
+              </Link>
+            );
+          }
+          
+          // Disabled/Empty Arc
+          return (
+            <div key={arc.slug} className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[var(--color-hairline)] pb-4 opacity-60 text-left">
+              <div>
+                <h3 className="font-chapter-title text-[28px] leading-[1.3] text-foreground">
+                  {arc.title}
+                </h3>
+                <p className="font-body-prose text-[15px] text-muted-foreground mt-1 line-clamp-2">
+                  {arc.summary}
+                </p>
+              </div>
+              <span className="small-caps text-[11px] tracking-[0.05em] text-muted-foreground shrink-0 mt-2 sm:mt-0">
+                {new Date(arc.startDate).getFullYear()}
+              </span>
+            </div>
+          );
+        })}
       </section>
-      
-      <div className="flex items-center justify-center gap-4 my-[64px] opacity-60">
-        <div className="h-px bg-rule w-16"></div>
-        <span className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal text-ink-mute uppercase tracking-widest">
-          Featured
-        </span>
-        <div className="h-px bg-rule w-16"></div>
-      </div>
-      
-      <article className="bg-paper-deep rounded-[18px] p-[28px] md:p-[40px] mb-[96px] cursor-pointer group hover:-translate-y-[2px] transition-all duration-700 ease-out">
-        <span className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal text-ink-mute block mb-4">
-          2024 · engineering
-        </span>
-        <h2 className="font-card-title text-[28px] leading-[1.3] font-semibold text-primary group-hover:text-secondary transition-colors duration-500 mb-4">
-          First Deployment
-        </h2>
-        <p className="font-body-prose text-[17px] leading-[1.85] tracking-[-0.01em] font-normal text-on-surface-variant line-clamp-3">
-          The terminal window sat quiet, awaiting the command that would push months of silent, localized logic into the noisy public sphere. There is a specific kind of vertigo associated with the enter key in these moments—a shift from the theoretical to the tangible.
-        </p>
-      </article>
-      
-      <div className="flex items-center justify-center gap-4 my-[64px] opacity-60">
-        <div className="h-px bg-rule w-16"></div>
-        <span className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal text-ink-mute uppercase tracking-widest">
-          Archive
-        </span>
-        <div className="h-px bg-rule w-16"></div>
-      </div>
-      
-      <div className="flex flex-col gap-6">
-        <article className="bg-surface-container-low border border-rule/50 rounded-[18px] p-[28px] cursor-pointer group hover:-translate-y-[2px] hover:bg-paper-deep transition-all duration-700 ease-out flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-6">
-          <div>
-            <h3 className="font-card-title text-[24px] leading-[1.3] font-semibold text-primary group-hover:text-secondary transition-colors duration-500">
-              Quiet Transitions
-            </h3>
-          </div>
-          <span className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal text-ink-mute shrink-0">
-            2023 · personal
-          </span>
-        </article>
-        
-        <article className="bg-surface-container-low border border-rule/50 rounded-[18px] p-[28px] cursor-pointer group hover:-translate-y-[2px] hover:bg-paper-deep transition-all duration-700 ease-out flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-6">
-          <div>
-            <h3 className="font-card-title text-[24px] leading-[1.3] font-semibold text-primary group-hover:text-secondary transition-colors duration-500">
-              The Shape of Memory
-            </h3>
-          </div>
-          <span className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal text-ink-mute shrink-0">
-            2023 · design
-          </span>
-        </article>
-        
-        <div className="flex justify-center mt-[24px]">
-          <button className="font-metadata text-[12px] leading-[1.5] tracking-[0.05em] font-normal lowercase text-ink-mute hover:text-secondary transition-colors duration-500 flex items-center gap-2 group">
-            <span className="">load older</span>
-            <span className="material-symbols-outlined text-[16px] group-hover:translate-y-0.5 transition-transform duration-500">
-              arrow_downward
-            </span>
-          </button>
-        </div>
-      </div>
     </main>
   );
 }

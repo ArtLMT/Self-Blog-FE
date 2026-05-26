@@ -56,7 +56,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className="bg-surface text-on-surface min-h-screen relative selection:bg-secondary-container selection:text-on-secondary-container transition-colors duration-700 antialiased">
+      <body className="min-h-screen relative transition-colors duration-700 antialiased animate-in fade-in">
         <NoiseFilter />
         <QueryProvider>{children}</QueryProvider>
       </body>

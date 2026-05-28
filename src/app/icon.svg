@@ -1,0 +1,128 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="#2B2118"/>
+
+  <!-- Inner Bronze Frame -->
+  <rect x="24" y="24" width="464" height="464" rx="72"
+        stroke="#9C6B3A"
+        stroke-width="8"
+        opacity="0.5"/>
+
+  <!-- Paper Glow -->
+  <rect x="42" y="42" width="428" height="428" rx="64"
+        fill="url(#paperGlow)"
+        opacity="0.12"/>
+
+  <!-- Main Book -->
+  <g transform="translate(6 0)">
+
+    <!-- Book Cover -->
+    <path d="
+      M108 92
+      C108 70 126 54 148 54
+      H332
+      C390 54 428 92 428 150
+      V364
+      C428 422 390 458 332 458
+      H148
+      C126 458 108 442 108 420
+      Z"
+      fill="#6E4B32"/>
+
+    <!-- Spine -->
+    <rect x="108" y="54" width="42" height="404"
+          rx="12"
+          fill="#4A3223"/>
+
+    <!-- Page Area -->
+    <path d="
+      M150 76
+      H330
+      C366 76 390 98 390 134
+      V378
+      C390 414 366 436 330 436
+      H150
+      Z"
+      fill="#DCC6A6"/>
+
+    <!-- Page Texture -->
+    <path d="M182 156 H344" stroke="#C3A889" stroke-width="7" stroke-linecap="round" opacity="0.45"/>
+    <path d="M182 202 H326" stroke="#C3A889" stroke-width="7" stroke-linecap="round" opacity="0.35"/>
+    <path d="M182 248 H348" stroke="#C3A889" stroke-width="7" stroke-linecap="round" opacity="0.3"/>
+    <path d="M182 294 H314" stroke="#C3A889" stroke-width="7" stroke-linecap="round" opacity="0.22"/>
+
+    <!-- Bookmark -->
+    <path d="
+      M338 54
+      H372
+      V184
+      L355 164
+      L338 184
+      Z"
+      fill="#B07A3E"/>
+
+  </g>
+
+  <!-- Large Quill -->
+  <g transform="rotate(-18 315 310)">
+
+    <!-- Feather -->
+    <path d="
+      M250 152
+      C360 178 408 278 336 392
+      C284 344 240 272 250 152
+      Z"
+      fill="#E8D8C2"/>
+
+    <!-- Feather Detail -->
+    <path d="
+      M278 184
+      C326 238 334 304 304 364"
+      stroke="#C7B29A"
+      stroke-width="6"
+      stroke-linecap="round"/>
+
+    <!-- Side Feather Cuts -->
+    <path d="M280 224 L338 250"
+          stroke="#C7B29A"
+          stroke-width="4"
+          stroke-linecap="round"
+          opacity="0.6"/>
+
+    <path d="M274 268 L328 300"
+          stroke="#C7B29A"
+          stroke-width="4"
+          stroke-linecap="round"
+          opacity="0.5"/>
+
+    <!-- Stem -->
+    <path d="M260 392 L378 486"
+          stroke="#B07A3E"
+          stroke-width="16"
+          stroke-linecap="round"/>
+
+    <!-- Pen Tip -->
+    <path d="
+      M374 482
+      L408 506
+      L360 500
+      Z"
+      fill="#8A5A30"/>
+
+  </g>
+
+  <!-- Gradient -->
+  <defs>
+    <radialGradient id="paperGlow"
+                    cx="0"
+                    cy="0"
+                    r="1"
+                    gradientUnits="userSpaceOnUse"
+                    gradientTransform="translate(256 256) rotate(90) scale(240)">
+      <stop stop-color="#F0DFC7"/>
+      <stop offset="1" stop-color="#F0DFC7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+</svg>

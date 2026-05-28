@@ -24,7 +24,7 @@ export const ROUTES = {
   REGISTER: '/register',
   BLOG: '/blog',
   ADMIN: {
-    DASHBOARD: '/admin/dashboard',
+    WORKSPACE: '/admin/workspace',
     POSTS: '/admin/posts',
     USERS: '/admin/users',
   },

@@ -9,9 +9,15 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
+import { useAuthStore } from '@/store/auth.store';
 
 export function QueryProvider({ children }: { children: ReactNode }) {
+  // Initialize user session on mount
+  useEffect(() => {
+    useAuthStore.getState().initialize();
+  }, []);
+
   // Create the QueryClient inside useState to avoid re-creating it on every render
   // while still ensuring each request gets its own client in SSR
   const [queryClient] = useState(

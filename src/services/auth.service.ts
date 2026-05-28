@@ -8,6 +8,7 @@
 
 import apiClient from '@/services/axios';
 import type {
+  ApiResponse,
   AuthResponse,
   LoginRequest,
   RefreshTokenRequest,
@@ -20,16 +21,16 @@ const AUTH_PREFIX = '/auth';
 export const authService = {
   /** Authenticate user and receive tokens */
   login: (data: LoginRequest) =>
-    apiClient.post<AuthResponse>(`${AUTH_PREFIX}/login`, data),
+    apiClient.post<ApiResponse<AuthResponse>>(`${AUTH_PREFIX}/login`, data),
 
   /** Register a new user account */
   register: (data: RegisterRequest) =>
-    apiClient.post<AuthResponse>(`${AUTH_PREFIX}/register`, data),
+    apiClient.post<ApiResponse<AuthResponse>>(`${AUTH_PREFIX}/register`, data),
 
   /** Refresh the access token using a valid refresh token */
   refreshToken: (data: RefreshTokenRequest) =>
-    apiClient.post<RefreshTokenResponse>(`${AUTH_PREFIX}/refresh`, data),
+    apiClient.post<ApiResponse<RefreshTokenResponse>>(`${AUTH_PREFIX}/refresh`, data),
 
   /** Invalidate the current session */
-  logout: () => apiClient.post(`${AUTH_PREFIX}/logout`),
+  logout: () => apiClient.post<ApiResponse<unknown>>(`${AUTH_PREFIX}/logout`),
 };

@@ -6,44 +6,52 @@
 // =============================================================================
 
 /** User role enumeration matching backend roles */
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'GUEST' | 'USER' | 'ADMIN';
 
 /** Core user representation used across the application */
 export interface User {
-  id: string;
-  email: string;
   username: string;
-  fullName: string;
-  avatarUrl?: string;
+  email?: string;
   role: UserRole;
-  createdAt: string;
+  languagePreference?: 'EN' | 'VI';
+}
+
+/** Standard API Response Wrapper */
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  errorCode?: string;
+  details?: Record<string, string>;
+  timestamp?: string;
 }
 
 /** Login request payload */
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 /** Registration request payload */
 export interface RegisterRequest {
-  email: string;
   username: string;
-  fullName: string;
+  email: string;
   password: string;
-  confirmPassword: string;
 }
 
-/** Authentication response from the API */
-export interface AuthResponse {
+/** Authentication response DTO from the API */
+export interface AuthResponseDTO {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  username: string;
+  role: UserRole;
 }
 
-/** Token refresh request */
+export type AuthResponse = AuthResponseDTO;
+
+/** Token refresh request (not needed if using cookies, but kept for type compatibility) */
 export interface RefreshTokenRequest {
-  refreshToken: string;
+  refreshToken?: string;
 }
 
 /** Token refresh response */
@@ -51,3 +59,4 @@ export interface RefreshTokenResponse {
   accessToken: string;
   refreshToken: string;
 }
+

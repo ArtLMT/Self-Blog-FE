@@ -23,7 +23,10 @@ import type { LoginRequest, RegisterRequest } from '@/types/auth.type';
 
 /**
  * Hook for handling login mutation with TanStack Query.
- * Provides loading state, error handling, and automatic redirect on success.
+ * Provides loading state, error handling, and redirecting back to the home page on success.
+ *
+ * DESIGN DECISION: Redirect back to the home page (ROUTES.HOME) after successful login
+ * to maintain curator context directly in the digital garden view.
  */
 export function useLoginMutation() {
   const router = useRouter();
@@ -32,13 +35,14 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (credentials: LoginRequest) => login(credentials),
     onSuccess: () => {
-      router.push(ROUTES.ADMIN.DASHBOARD);
+      router.push(ROUTES.HOME);
     },
   });
 }
 
 /**
  * Hook for handling registration mutation.
+ * Redirects back to the home page (ROUTES.HOME) on success.
  */
 export function useRegisterMutation() {
   const router = useRouter();
@@ -47,7 +51,7 @@ export function useRegisterMutation() {
   return useMutation({
     mutationFn: (data: RegisterRequest) => register(data),
     onSuccess: () => {
-      router.push(ROUTES.ADMIN.DASHBOARD);
+      router.push(ROUTES.HOME);
     },
   });
 }

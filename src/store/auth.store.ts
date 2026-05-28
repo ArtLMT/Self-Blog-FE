@@ -41,7 +41,7 @@ interface AuthActions {
   /** Clear session and tokens */
   logout: () => Promise<void>;
   /** Restore user from persisted tokens (called on app mount) */
-  initialize: () => void;
+  initialize: () => Promise<void>;
   /** Clear any auth errors */
   clearError: () => void;
 }
@@ -61,10 +61,20 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
   login: async (credentials) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await authService.login(credentials);
-      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
-      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
-      set({ user: data.user, isLoading: false });
+      const response = await authService.login(credentials);
+      const authData = response.data.data;
+      if (!authData) {
+        throw new Error('Invalid credentials');
+      }
+      const userObj = {
+        username: authData.username,
+        role: authData.role,
+      };
+      localStorage.setItem('selfblog_user_session', JSON.stringify(userObj));
+      if (typeof document !== 'undefined') {
+        document.cookie = 'selfblog_logged_in=true; path=/; max-age=86400; SameSite=Lax';
+      }
+      set({ user: userObj, isLoading: false });
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -77,10 +87,20 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
   register: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      const { data: response } = await authService.register(data);
-      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
-      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
-      set({ user: response.user, isLoading: false });
+      const response = await authService.register(data);
+      const authData = response.data.data;
+      if (!authData) {
+        throw new Error('Registration failed');
+      }
+      const userObj = {
+        username: authData.username,
+        role: authData.role,
+      };
+      localStorage.setItem('selfblog_user_session', JSON.stringify(userObj));
+      if (typeof document !== 'undefined') {
+        document.cookie = 'selfblog_logged_in=true; path=/; max-age=86400; SameSite=Lax';
+      }
+      set({ user: userObj, isLoading: false });
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -94,24 +114,40 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
     try {
       await authService.logout();
     } catch {
-      // Ignore errors — we clear tokens regardless
+      // Ignore errors — we clear session regardless
     } finally {
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      localStorage.removeItem('selfblog_user_session');
+      if (typeof document !== 'undefined') {
+        document.cookie = 'selfblog_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      }
       set({ user: null });
     }
   },
 
-  initialize: () => {
+  initialize: async () => {
     if (typeof window === 'undefined') {
       set({ isInitialized: true });
       return;
     }
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    if (token) {
-      // TODO: Optionally call a /me endpoint to validate token + get user data
-      // For now, we just mark as initialized; the 401 interceptor handles expiry
+    const hasCookie = document.cookie.includes('selfblog_logged_in=true');
+    const sessionStr = localStorage.getItem('selfblog_user_session');
+
+    if (hasCookie && sessionStr) {
+      try {
+        await authService.refreshToken({});
+        const userObj = JSON.parse(sessionStr);
+        set({ user: userObj });
+      } catch {
+        localStorage.removeItem('selfblog_user_session');
+        document.cookie = 'selfblog_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        set({ user: null });
+      }
+    } else {
+      localStorage.removeItem('selfblog_user_session');
+      document.cookie = 'selfblog_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      set({ user: null });
     }
+    
     set({ isInitialized: true });
   },
 

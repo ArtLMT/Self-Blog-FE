@@ -23,9 +23,10 @@ import { PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from '@/lib/constants';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Read token from cookie (set by the client after login)
-  // In production, use httpOnly cookies set by the backend
-  const token = request.cookies.get('selfblog_access_token')?.value;
+  // Read refresh token from HTTP-only cookie set by the server, fallback to client-side session cookie
+  const token = request.cookies.get('refreshToken')?.value 
+    || request.cookies.get('refresh_token')?.value
+    || request.cookies.get('selfblog_logged_in')?.value;
 
   // Check if the current route is protected
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
@@ -44,7 +45,7 @@ export function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL(ROUTES.ADMIN.DASHBOARD, request.url));
+    return NextResponse.redirect(new URL(ROUTES.ADMIN.WORKSPACE, request.url));
   }
 
   return NextResponse.next();

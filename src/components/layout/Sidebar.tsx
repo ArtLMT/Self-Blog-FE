@@ -8,16 +8,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, ArrowLeft } from 'lucide-react';
+import { BookOpen, FileText, Users, ArrowLeft, LogOut } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
+import { useAuth } from '@/hooks/useAuth';
 
 const sidebarLinks = [
   {
-    href: ROUTES.ADMIN.DASHBOARD,
-    label: 'Dashboard',
-    icon: LayoutDashboard,
+    href: ROUTES.ADMIN.WORKSPACE,
+    label: 'Workspace',
+    icon: BookOpen,
   },
   {
     href: ROUTES.ADMIN.POSTS,
@@ -33,6 +34,13 @@ const sidebarLinks = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout().then(() => {
+      window.location.href = ROUTES.HOME;
+    });
+  };
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-border/40 bg-muted/20">
@@ -68,6 +76,17 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Footer section with Logout */}
+      <div className="border-t border-border/40 p-4">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+        >
+          <LogOut className="size-4" />
+          Logout
+        </button>
+      </div>
     </aside>
   );
 }

@@ -1,76 +1,184 @@
 // =============================================================================
-// Features: Post - TanStack Query Hooks
+// Features: Post - TanStack Query Hooks (Admin)
 // =============================================================================
-// Query hooks for blog post data fetching and mutations.
+// Feature-based organization for managing writing content: Arcs, Chapters,
+// and Episodes. These hooks integrate with backend admin services and handle
+// caching, automatic invalidation, and background updates.
 // =============================================================================
 
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { arcService } from '@/services/arc.service';
+import { chapterService } from '@/services/chapter.service';
+import { episodeService } from '@/services/episode.service';
+import type { 
+  ArcRequestDTO, 
+  ChapterRequestDTO, 
+  EpisodeRequestDTO 
+} from '@/types/models';
+import type { ChapterFormValues, EpisodeFormValues } from './schemas';
 
-import { postService } from '@/services/post.service';
-import type { PostQueryParams, PostRequest } from '@/types/post.type';
-
-/** Query key factory — prevents key collisions and enables targeted invalidation */
-export const postKeys = {
-  all: ['posts'] as const,
-  lists: () => [...postKeys.all, 'list'] as const,
-  list: (params: PostQueryParams) => [...postKeys.lists(), params] as const,
-  details: () => [...postKeys.all, 'detail'] as const,
-  detail: (slug: string) => [...postKeys.details(), slug] as const,
+/**
+ * Cache key factory for admin state.
+ * Keeps keys organized to allow targeted cache invalidation.
+ */
+export const adminKeys = {
+  all: ['admin'] as const,
+  arcs: () => [...adminKeys.all, 'arcs'] as const,
+  arc: (id: string) => [...adminKeys.all, 'arc', id] as const,
 };
 
-/** Fetch paginated posts */
-export function usePostsQuery(params?: PostQueryParams) {
+/**
+ * Hook to fetch the entire administrative writing hierarchy.
+ * Returns nested Arcs ➔ Chapters ➔ Episodes structure.
+ */
+export function useAdminArcsQuery() {
   return useQuery({
-    queryKey: postKeys.list(params ?? {}),
-    queryFn: () => postService.getAll(params).then((res) => res.data),
-  });
-}
-
-/** Fetch a single post by slug */
-export function usePostQuery(slug: string) {
-  return useQuery({
-    queryKey: postKeys.detail(slug),
-    queryFn: () => postService.getBySlug(slug).then((res) => res.data),
-    enabled: !!slug,
-  });
-}
-
-/** Create a new post */
-export function useCreatePostMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: PostRequest) => postService.create(data).then((res) => res.data),
-    onSuccess: () => {
-      // Invalidate all post lists to refetch with the new post
-      queryClient.invalidateQueries({ queryKey: postKeys.lists() });
+    queryKey: adminKeys.arcs(),
+    queryFn: async () => {
+      const response = await arcService.getAdminArcs();
+      return response.data.data ?? [];
     },
   });
 }
 
-/** Update an existing post */
-export function useUpdatePostMutation(id: string) {
-  const queryClient = useQueryClient();
+// ---------------------------------------------------------------------------
+// Arc Mutations
+// ---------------------------------------------------------------------------
 
+/** Mutation hook to create a new Arc */
+export function useCreateArcMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: PostRequest) => postService.update(id, data).then((res) => res.data),
-    onSuccess: (updatedPost) => {
-      queryClient.invalidateQueries({ queryKey: postKeys.lists() });
-      queryClient.setQueryData(postKeys.detail(updatedPost.slug), updatedPost);
+    mutationFn: (data: ArcRequestDTO) => arcService.createArc(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
     },
   });
 }
 
-/** Delete a post */
-export function useDeletePostMutation() {
+/** Mutation hook to update an existing Arc */
+export function useUpdateArcMutation() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (id: string) => postService.delete(id),
+    mutationFn: ({ id, data }: { id: string; data: ArcRequestDTO }) => 
+      arcService.updateArc(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+/** Mutation hook to soft-delete an Arc */
+export function useDeleteArcMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => arcService.deleteArc(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Chapter Mutations
+// ---------------------------------------------------------------------------
+
+const mapFormToChapterRequest = (data: ChapterFormValues): ChapterRequestDTO => ({
+  language: data.language,
+  title: data.title,
+  slug: data.slug,
+  summary: data.content || undefined,
+  orderIndex: data.displayOrder,
+  status: data.status,
+  publishedAt: data.publishDate || undefined,
+  authorNotes: data.authorNotes || undefined,
+  arcId: data.arcId,
+});
+
+/** Mutation hook to create a new Chapter */
+export function useCreateChapterMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ChapterFormValues) => 
+      chapterService.createChapter(mapFormToChapterRequest(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+/** Mutation hook to update an existing Chapter */
+export function useUpdateChapterMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ChapterFormValues }) => 
+      chapterService.updateChapter(id, mapFormToChapterRequest(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+/** Mutation hook to delete/lock a Chapter */
+export function useDeleteChapterMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => chapterService.deleteChapter(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Episode Mutations
+// ---------------------------------------------------------------------------
+
+const mapFormToEpisodeRequest = (data: EpisodeFormValues): EpisodeRequestDTO => ({
+  language: data.language,
+  title: data.title,
+  slug: data.slug,
+  markdownContent: data.content,
+  orderIndex: data.displayOrder,
+  status: data.status,
+  eventDate: data.publishDate || new Date().toISOString(),
+  authorNotes: data.authorNotes || undefined,
+  chapterId: data.chapterId,
+});
+
+/** Mutation hook to create a new Episode */
+export function useCreateEpisodeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: EpisodeFormValues) => 
+      episodeService.createEpisode(mapFormToEpisodeRequest(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+/** Mutation hook to update an existing Episode */
+export function useUpdateEpisodeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: EpisodeFormValues }) => 
+      episodeService.updateEpisode(id, mapFormToEpisodeRequest(data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
+    },
+  });
+}
+
+/** Mutation hook to soft-delete an Episode */
+export function useDeleteEpisodeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => episodeService.deleteEpisode(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.arcs() });
     },
   });
 }

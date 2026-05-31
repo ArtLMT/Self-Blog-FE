@@ -1,23 +1,100 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { mockArcs } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api-server';
+import type { TimelineItemDTO, PublicArcResponseDTO } from '@/types/models';
 
 export const metadata: Metadata = {
   title: 'Timeline',
   description: 'The complete timeline of Arcs, Chapters, and Episodes.',
 };
 
-export default function TimelinePage() {
-  // Group arcs by year based on startDate
-  const arcsByYear = mockArcs.reduce((acc, arc) => {
-    const year = new Date(arc.startDate).getFullYear().toString();
-    if (!acc[year]) acc[year] = [];
-    acc[year].push(arc);
-    return acc;
-  }, {} as Record<string, typeof mockArcs>);
+export default async function TimelinePage() {
+  let timelineItems: TimelineItemDTO[] = [];
+  let arcs: PublicArcResponseDTO[] = [];
 
-  // Sort years oldest first or newest first? Let's do oldest first for a true timeline.
-  const sortedYears = Object.keys(arcsByYear).sort((a, b) => Number(a) - Number(b));
+  try {
+    const [timelineRes, arcsRes] = await Promise.all([
+      apiFetch<TimelineItemDTO[]>('/public/arcs/timeline'),
+      apiFetch<PublicArcResponseDTO[]>('/public/arcs'),
+    ]);
+    timelineItems = timelineRes.data ?? [];
+    arcs = arcsRes.data ?? [];
+  } catch (err) {
+    console.error('Failed to load timeline data:', err);
+  }
+
+  // Map arc slugs to their start dates and summaries
+  const arcSlugToYear: Record<string, string> = {};
+  const arcSlugToSummary: Record<string, string> = {};
+  arcs.forEach((arc) => {
+    const year = new Date(arc.startDate).getFullYear().toString();
+    arcSlugToYear[arc.slug] = year;
+    arcSlugToSummary[arc.slug] = arc.summary || '';
+  });
+
+  // Reconstruct hierarchy: Year -> Arc -> Chapter -> Episode
+  interface TimelineEpisode {
+    title: string;
+    slug: string;
+    orderIndex: number;
+  }
+  interface TimelineChapter {
+    title: string;
+    slug: string;
+    orderIndex: number;
+    episodes: TimelineEpisode[];
+  }
+  interface TimelineArc {
+    title: string;
+    slug: string;
+    summary: string;
+    displayOrder: number;
+    chapters: Record<string, TimelineChapter>;
+  }
+
+  const hierarchy: Record<string, Record<string, TimelineArc>> = {};
+
+  timelineItems.forEach((item) => {
+    const year = arcSlugToYear[item.arcSlug] || 'Unknown';
+    const summary = arcSlugToSummary[item.arcSlug] || '';
+
+    if (!hierarchy[year]) hierarchy[year] = {};
+    if (!hierarchy[year][item.arcSlug]) {
+      hierarchy[year][item.arcSlug] = {
+        title: item.arcTitle,
+        slug: item.arcSlug,
+        summary,
+        displayOrder: item.arcDisplayOrder,
+        chapters: {},
+      };
+    }
+
+    const arcObj = hierarchy[year][item.arcSlug];
+    if (item.chapterSlug) {
+      if (!arcObj.chapters[item.chapterSlug]) {
+        arcObj.chapters[item.chapterSlug] = {
+          title: item.chapterTitle,
+          slug: item.chapterSlug,
+          orderIndex: item.chapterOrderIndex,
+          episodes: [],
+        };
+      }
+
+      const chapterObj = arcObj.chapters[item.chapterSlug];
+      if (item.episodeSlug) {
+        if (!chapterObj.episodes.some((e) => e.slug === item.episodeSlug)) {
+          chapterObj.episodes.push({
+            title: item.episodeTitle,
+            slug: item.episodeSlug,
+            orderIndex: item.episodeOrderIndex,
+          });
+        }
+      }
+    }
+  });
+
+  // Sort years oldest first
+  const sortedYears = Object.keys(hierarchy).sort((a, b) => Number(a) - Number(b));
 
   return (
     <div className="max-w-[720px] mx-auto px-6 py-[96px]">
@@ -43,48 +120,54 @@ export default function TimelinePage() {
               </div>
 
               <div className="space-y-24 mt-2">
-                {arcsByYear[year].sort((a, b) => a.displayOrder - b.displayOrder).map((arc) => (
-                  <div key={arc.slug} className="relative">
-                    {/* Arc Node */}
-                    <div className="absolute -left-[23.5px] sm:-left-[43.5px] top-[14px] w-2 h-2 rounded-full bg-secondary z-10 ring-2 ring-background"></div>
+                {Object.values(hierarchy[year])
+                  .sort((a, b) => a.displayOrder - b.displayOrder)
+                  .map((arc) => (
+                    <div key={arc.slug} className="relative">
+                      {/* Arc Node */}
+                      <div className="absolute -left-[23.5px] sm:-left-[43.5px] top-[14px] w-2 h-2 rounded-full bg-secondary z-10 ring-2 ring-background"></div>
 
-                    <div className="mb-8">
-                      <h2 className="font-chapter-title text-[32px] text-foreground mb-2">{arc.title}</h2>
-                      <p className="font-body-prose text-[17px] text-muted-foreground">{arc.summary}</p>
-                    </div>
+                      <div className="mb-8">
+                        <h2 className="font-chapter-title text-[32px] text-foreground mb-2">{arc.title}</h2>
+                        {arc.summary && <p className="font-body-prose text-[17px] text-muted-foreground">{arc.summary}</p>}
+                      </div>
 
-                    {/* Chapters List */}
-                    <div className="ml-2 sm:ml-4 pl-6 border-l border-[var(--color-hairline)] space-y-12">
-                      {arc.chapters.sort((a, b) => a.orderIndex - b.orderIndex).map((chapter) => (
-                        <div key={chapter.slug}>
-                          <div className="mb-5">
-                            <Link 
-                              href={`/chapters/${chapter.slug}`} 
-                              className="font-chapter-title text-[24px] text-foreground hover:text-secondary transition-colors link-underline inline-block mb-1"
-                            >
-                              Chapter {chapter.orderIndex}: {chapter.title}
-                            </Link>
-                            <div className="small-caps text-[11px] tracking-[0.05em] text-muted-foreground flex gap-2 items-center">
-                              <span>{new Date(chapter.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                              <span className="text-[var(--color-hairline)]">|</span>
-                              <span>{chapter.readingTimeMinutes} min read</span>
-                            </div>
-                          </div>
-
-                          {/* Episodes List */}
-                          <div className="ml-2 pl-4 border-l border-[var(--color-hairline)] space-y-4">
-                            {chapter.episodes.sort((a, b) => a.orderIndex - b.orderIndex).map((episode) => (
-                              <div key={episode.slug} className="flex items-start gap-4">
-                                <span className="small-caps text-[11px] text-muted-foreground w-6 mt-1 text-right">{romanize(episode.orderIndex)}.</span>
-                                <span className="font-ui-label text-[15px] text-foreground/90 leading-relaxed">{episode.title}</span>
+                      {/* Chapters List */}
+                      <div className="ml-2 sm:ml-4 pl-6 border-l border-[var(--color-hairline)] space-y-12">
+                        {Object.values(arc.chapters)
+                          .sort((a, b) => a.orderIndex - b.orderIndex)
+                          .map((chapter) => (
+                            <div key={chapter.slug}>
+                              <div className="mb-5">
+                                <Link 
+                                  href={`/chapters/${chapter.slug}`} 
+                                  className="font-chapter-title text-[24px] text-foreground hover:text-secondary transition-colors link-underline inline-block mb-1"
+                                >
+                                  Chapter {chapter.orderIndex}: {chapter.title}
+                                </Link>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+
+                              {/* Episodes List */}
+                              <div className="ml-2 pl-4 border-l border-[var(--color-hairline)] space-y-4">
+                                {chapter.episodes
+                                  .sort((a, b) => a.orderIndex - b.orderIndex)
+                                  .map((episode) => (
+                                    <div key={episode.slug} className="flex items-start gap-4">
+                                      <span className="small-caps text-[11px] text-muted-foreground w-6 mt-1 text-right">{romanize(episode.orderIndex)}.</span>
+                                      <Link 
+                                        href={`/chapters/${chapter.slug}/${episode.slug}`}
+                                        className="font-ui-label text-[15px] text-foreground/90 leading-relaxed hover:text-secondary transition-colors link-underline"
+                                      >
+                                        {episode.title}
+                                      </Link>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           ))}

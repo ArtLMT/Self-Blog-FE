@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -269,7 +270,8 @@
 }
 
 @layer components {
-    .drop-cap::first-letter {
+    .drop-cap::first-letter,
+    .episode-content > p:first-of-type::first-letter {
         float: left;
         font-size: 5.5em;
         line-height: 0.8;

@@ -1,22 +1,34 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { mockArcs } from '@/lib/mock-data';
-import { PublicChapterResponseDTO } from '@/types/models';
+import { apiFetch } from '@/lib/api-server';
+import type { PublicChapterResponseDTO, PublicArcResponseDTO } from '@/types/models';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const { slug } = await props.params;
-  let chapterTitle = 'Chapter';
-  for (const arc of mockArcs) {
-    const found = arc.chapters.find(c => c.slug === slug);
-    if (found) {
-      chapterTitle = found.title;
-      break;
+  try {
+    const res = await apiFetch<PublicChapterResponseDTO>(`/public/chapters/${slug}`);
+    if (res.data) {
+      return { title: res.data.title };
     }
+  } catch (err) {
+    console.error('Error generating metadata for chapter:', err);
   }
-  return { title: chapterTitle };
+  return { title: 'Chapter' };
+}
+
+function formatDateUTC(dateStr?: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 export default async function ChapterGatewayPage(props: PageProps) {
@@ -25,37 +37,51 @@ export default async function ChapterGatewayPage(props: PageProps) {
   let chapter: PublicChapterResponseDTO | undefined;
   let arcTitle = '';
 
-  for (const arc of mockArcs) {
-    const found = arc.chapters.find(c => c.slug === slug);
-    if (found) {
-      chapter = found;
-      arcTitle = arc.title;
-      break;
-    }
+  try {
+    const res = await apiFetch<PublicChapterResponseDTO>(`/public/chapters/${slug}`);
+    chapter = res.data;
+  } catch (err) {
+    console.error('Error loading chapter details:', err);
   }
 
   if (!chapter) {
     notFound();
   }
 
-  const sortedEpisodes = [...chapter.episodes].sort((a, b) => a.orderIndex - b.orderIndex);
+  try {
+    const arcsRes = await apiFetch<PublicArcResponseDTO[]>('/public/arcs');
+    const parentArc = arcsRes.data?.find((a) => a.slug === chapter?.arcSlug);
+    if (parentArc) {
+      arcTitle = parentArc.title;
+    }
+  } catch (err) {
+    console.error('Error loading parent arc for chapter details:', err);
+  }
+
+  const sortedEpisodes = [...(chapter.episodes || [])].sort((a, b) => a.orderIndex - b.orderIndex);
 
   return (
     <article className="flex-grow w-full max-w-[720px] mx-auto px-6 pt-[96px] pb-[96px]">
       {/* Chapter Header */}
       <header className="text-center mb-[64px]">
-        <div className="small-caps text-[12px] tracking-[0.2em] text-muted-foreground mb-4">
-          Arc: {arcTitle}
-        </div>
+        {arcTitle && (
+          <div className="small-caps text-[12px] tracking-[0.2em] text-muted-foreground mb-4">
+            Arc: {arcTitle}
+          </div>
+        )}
         
         <h1 className="font-chapter-title text-[56px] leading-[1.2] font-medium text-primary mb-6">
           {chapter.title}
         </h1>
         
         <div className="small-caps text-[12px] tracking-[0.2em] text-muted-foreground flex items-center justify-center gap-3">
-          <span>{new Date(chapter.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-          <span className="text-[var(--color-hairline)]">|</span>
-          <span>{chapter.readingTimeMinutes} min read</span>
+          <span>{formatDateUTC(chapter.publishedAt)}</span>
+          {chapter.readingTimeMinutes !== undefined && (
+            <>
+              <span className="text-[var(--color-hairline)]">|</span>
+              <span>{chapter.readingTimeMinutes} min read</span>
+            </>
+          )}
         </div>
       </header>
 
@@ -69,9 +95,11 @@ export default async function ChapterGatewayPage(props: PageProps) {
       )}
 
       {/* Chapter Summary */}
-      <div className="font-body-prose text-[17px] leading-[1.85] text-foreground/90 space-y-6 max-w-[62ch] mx-auto mb-[96px]">
-        <p className="drop-cap">{chapter.summary}</p>
-      </div>
+      {chapter.summary && (
+        <div className="font-body-prose text-[17px] leading-[1.85] text-foreground/90 space-y-6 max-w-[62ch] mx-auto mb-[96px]">
+          <p className="drop-cap">{chapter.summary}</p>
+        </div>
+      )}
 
       {/* Episode Directory */}
       <div className="max-w-[500px] mx-auto">
@@ -85,7 +113,7 @@ export default async function ChapterGatewayPage(props: PageProps) {
               </span>
               
               <Link 
-                href={`/episodes/${episode.slug}`}
+                href={`/chapters/${chapter.slug}/${episode.slug}`}
                 className="font-ui-label text-[16px] text-foreground hover:text-secondary transition-colors link-underline w-fit"
               >
                 {episode.title}

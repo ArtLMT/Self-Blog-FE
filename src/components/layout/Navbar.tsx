@@ -1,18 +1,54 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/lib/constants';
+import { useLanguageStore } from '@/store/language.store';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function Navbar() {
   const pathname = usePathname();
-  const [lang, setLang] = useState<'EN' | 'VN'>('EN');
+  const router = useRouter();
+  const { language, setLanguage } = useLanguageStore();
+  const queryClient = useQueryClient();
+  const { user, isAuthenticated, isAdmin, isInitialized, logout } = useAuth();
+  
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Safe client-side hydration for cookie & localStorage preference
+    let saved: 'EN' | 'VN' | null = null;
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(/selfblog_language=(EN|VN)/);
+      if (match) saved = match[1] as 'EN' | 'VN';
+    }
+    if (!saved) {
+      saved = localStorage.getItem('selfblog_language') as 'EN' | 'VN';
+    }
+    if (saved && saved !== 'EN') {
+      setLanguage(saved);
+    }
+  }, [setLanguage]);
+
+  const activeLang = mounted ? language : 'EN';
+
+  const handleLanguageChange = (newLang: 'EN' | 'VN') => {
+    setLanguage(newLang);
+    // Invalidate client-side query cache (e.g. workspace panel)
+    queryClient.invalidateQueries();
+    // Re-execute Server Components data fetching for public routes
+    router.refresh();
+  };
 
   const links = [
     { name: 'Home', href: '/' },
     { name: 'Chapters', href: '/chapters' },
     { name: 'Timeline', href: '/timeline' },
     { name: 'Now', href: '/now' },
+    ...(isAdmin ? [{ name: 'Workspace', href: ROUTES.ADMIN.WORKSPACE }] : []),
   ];
 
   const getLinkClass = (href: string) => {
@@ -37,16 +73,16 @@ export function Navbar() {
 
   return (
     <header className="w-full sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border transition-colors duration-700">
-      <div className="max-w-[720px] mx-auto px-6 py-5 flex justify-between sm:grid sm:grid-cols-3 items-center">
-        {/* Left Area: Mobile Title (Hidden on sm screens and up) */}
-        <div className="flex justify-start">
-          <div className="sm:hidden small-caps text-[12px] tracking-[0.2em] text-foreground font-bold">
+      <div className="max-w-[720px] mx-auto px-6 py-5 flex justify-between items-center gap-4">
+        {/* Left Area: Brand logo (Visible on all screen sizes) */}
+        <div className="flex justify-start shrink-0">
+          <div className="small-caps text-[12px] tracking-[0.2em] text-foreground font-bold">
             SelfBlog
           </div>
         </div>
 
         {/* Center Area: Desktop Links */}
-        <nav className="hidden sm:flex justify-center items-center gap-8">
+        <nav className="hidden sm:flex justify-center items-center gap-6 md:gap-8 flex-1">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className={getLinkClass(l.href)}>
               {l.name}
@@ -54,21 +90,50 @@ export function Navbar() {
           ))}
         </nav>
         
-        {/* Right Area: Language Toggle */}
-        <div className="flex items-center justify-end gap-2 small-caps text-[12px] tracking-[0.2em]">
-          <button 
-            onClick={() => setLang('EN')} 
-            className={`transition-colors duration-300 ${lang === 'EN' ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'}`}
-          >
-            EN
-          </button>
-          <span className="text-foreground/20">/</span>
-          <button 
-            onClick={() => setLang('VN')} 
-            className={`transition-colors duration-300 ${lang === 'VN' ? 'text-foreground' : 'text-foreground/40 hover:text-foreground/70'}`}
-          >
-            VN
-          </button>
+        {/* Right Area: Language Toggle & User Auth */}
+        <div className="flex items-center justify-end gap-3 sm:gap-4 small-caps text-[12px] tracking-[0.2em] shrink-0">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => handleLanguageChange('EN')} 
+              className={`transition-colors duration-300 cursor-pointer ${activeLang === 'EN' ? 'text-foreground font-semibold' : 'text-foreground/40 hover:text-foreground/70'}`}
+            >
+              EN
+            </button>
+            <span className="text-foreground/20">/</span>
+            <button 
+              onClick={() => handleLanguageChange('VN')} 
+              className={`transition-colors duration-300 cursor-pointer ${activeLang === 'VN' ? 'text-foreground font-semibold' : 'text-foreground/40 hover:text-foreground/70'}`}
+            >
+              VN
+            </button>
+          </div>
+          
+          <span className="text-foreground/20">|</span>
+
+          {isInitialized && isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <Link 
+                href={ROUTES.ADMIN.WORKSPACE} 
+                className="text-foreground/70 hover:text-primary transition-colors duration-300 font-medium"
+              >
+                {user?.username || 'Admin'}
+              </Link>
+              <span className="text-foreground/20">/</span>
+              <button 
+                onClick={() => logout()}
+                className="text-foreground/40 hover:text-destructive transition-colors duration-300 cursor-pointer"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link 
+              href={ROUTES.LOGIN} 
+              className="text-foreground/70 hover:text-primary transition-colors duration-300 font-medium"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
 

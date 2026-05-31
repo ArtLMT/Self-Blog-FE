@@ -1,14 +1,23 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { mockArcs } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api-server';
+import type { PublicArcResponseDTO } from '@/types/models';
 
 export const metadata: Metadata = {
   title: 'Chapters',
   description: 'An index of all chapters.',
 };
 
-export default function ChaptersIndexPage() {
-  const activeArcs = mockArcs.filter(arc => arc.chapters && arc.chapters.length > 0);
+export default async function ChaptersIndexPage() {
+  let arcs: PublicArcResponseDTO[] = [];
+  try {
+    const response = await apiFetch<PublicArcResponseDTO[]>('/public/arcs');
+    arcs = response.data ?? [];
+  } catch (err) {
+    console.error('Failed to load arcs for index:', err);
+  }
+
+  const activeArcs = arcs.filter(arc => arc.chapters && arc.chapters.length > 0);
 
   return (
     <main className="max-w-[720px] mx-auto px-6 pt-[96px] pb-[96px]">

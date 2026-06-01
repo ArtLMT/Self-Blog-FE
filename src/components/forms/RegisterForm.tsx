@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { registerSchema, type RegisterFormValues } from '@/lib/validators';
-import { useRegisterMutation } from '@/features/auth/useAuthQueries';
+import { useRegisterMutation } from '@/hooks/queries/useAuthQueries';
 import { ROUTES } from '@/lib/constants';
 
 /**

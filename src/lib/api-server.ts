@@ -39,7 +39,7 @@ export async function apiFetch<T>(
         lang = 'VN';
       }
     }
-  } catch (e) {
+  } catch {
     // Suppress warning if cookies/headers are not available (e.g., static build-time generation)
   }
 
@@ -60,7 +60,7 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
-      let apiError: ApiResponse<any> | undefined;
+      let apiError: ApiResponse<unknown> | undefined;
       try {
         apiError = await res.json();
       } catch {

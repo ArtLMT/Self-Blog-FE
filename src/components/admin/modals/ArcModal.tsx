@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-import { arcSchema, type ArcFormValues } from '../schemas';
-import { useCreateArcMutation, useUpdateArcMutation } from '../usePostQueries';
+import { arcSchema, type ArcFormValues } from '@/lib/validators/content.schema';
+import { useCreateArcMutation, useUpdateArcMutation } from '@/hooks/queries/useAdminQueries';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,6 @@ export function ArcModal({ isOpen, onClose, arc }: ArcModalProps) {
   });
 
   useEffect(() => {
-    setGlobalError(null);
     if (arc && isOpen) {
       form.reset({
         language: arc.language,
@@ -94,8 +93,13 @@ export function ArcModal({ isOpen, onClose, arc }: ArcModalProps) {
     }
   };
 
+  const handleClose = () => {
+    setGlobalError(null);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-3xl w-full bg-background border-border/40 rounded-xl p-0 overflow-hidden max-h-[92vh] flex flex-col gap-0"
@@ -103,7 +107,8 @@ export function ArcModal({ isOpen, onClose, arc }: ArcModalProps) {
         {/* Header */}
         <div className="relative px-7 pt-7 pb-5">
           <DialogClose
-            render={<button className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none" />}
+            onClick={handleClose}
+            className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none"
           >
             ×
           </DialogClose>
@@ -296,7 +301,7 @@ export function ArcModal({ isOpen, onClose, arc }: ArcModalProps) {
 
               {/* Submit */}
               <div className="pt-2 flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={onClose} className="text-foreground/50">
+                <Button type="button" variant="ghost" size="sm" onClick={handleClose} className="text-foreground/50">
                   Cancel
                 </Button>
                 <Button type="submit" size="sm" disabled={isPending} className="min-w-[100px]">

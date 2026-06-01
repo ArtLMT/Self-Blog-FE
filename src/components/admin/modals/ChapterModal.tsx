@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-import { chapterSchema, type ChapterFormValues } from '../schemas';
-import { useCreateChapterMutation, useUpdateChapterMutation } from '../usePostQueries';
+import { chapterSchema, type ChapterFormValues } from '@/lib/validators/content.schema';
+import { useCreateChapterMutation, useUpdateChapterMutation } from '@/hooks/queries/useAdminQueries';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,6 @@ export function ChapterModal({ isOpen, onClose, arcId, chapter }: ChapterModalPr
   });
 
   useEffect(() => {
-    setGlobalError(null);
     if (chapter && isOpen) {
       form.reset({
         language: chapter.language,
@@ -103,8 +102,13 @@ export function ChapterModal({ isOpen, onClose, arcId, chapter }: ChapterModalPr
     }
   };
 
+  const handleClose = () => {
+    setGlobalError(null);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="max-w-lg w-full bg-background border-border/40 rounded-xl p-0 overflow-hidden max-h-[92vh] flex flex-col gap-0"
@@ -112,7 +116,8 @@ export function ChapterModal({ isOpen, onClose, arcId, chapter }: ChapterModalPr
         {/* Header */}
         <div className="relative px-7 pt-7 pb-5">
           <DialogClose
-            render={<button className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none" />}
+            onClick={handleClose}
+            className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none"
           >
             ×
           </DialogClose>
@@ -275,7 +280,7 @@ export function ChapterModal({ isOpen, onClose, arcId, chapter }: ChapterModalPr
 
               {/* Submit */}
               <div className="pt-2 flex justify-end gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={onClose} className="text-foreground/50">
+                <Button type="button" variant="ghost" size="sm" onClick={handleClose} className="text-foreground/50">
                   Cancel
                 </Button>
                 <Button type="submit" size="sm" disabled={isPending} className="min-w-[110px]">

@@ -18,7 +18,7 @@
 
 import { create } from 'zustand';
 
-import { STORAGE_KEYS } from '@/lib/constants';
+// No unused imports
 import { authService } from '@/services/auth.service';
 import type { LoginRequest, RegisterRequest, User } from '@/types/auth.type';
 

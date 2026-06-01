@@ -25,7 +25,7 @@ export const ROUTES = {
   BLOG: '/blog',
   ADMIN: {
     WORKSPACE: '/admin/workspace',
-    POSTS: '/admin/posts',
+
     USERS: '/admin/users',
   },
 } as const;

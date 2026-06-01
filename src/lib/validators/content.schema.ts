@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ContentStatus, Language, Visibility } from '@/types/models';
 
 const languageSchema = z.enum(['EN', 'VI'] as const);
 const statusSchema = z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED'] as const);

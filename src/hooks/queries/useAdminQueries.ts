@@ -17,7 +17,7 @@ import type {
   ChapterRequestDTO, 
   EpisodeRequestDTO 
 } from '@/types/models';
-import type { ChapterFormValues, EpisodeFormValues } from './schemas';
+import type { ChapterFormValues, EpisodeFormValues } from '@/lib/validators/content.schema';
 
 /**
  * Cache key factory for admin state.

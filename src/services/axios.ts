@@ -15,7 +15,7 @@
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-import { API_BASE_URL, STORAGE_KEYS } from '@/lib/constants';
+import { API_BASE_URL } from '@/lib/constants';
 
 /**
  * Pre-configured Axios instance for all API calls.

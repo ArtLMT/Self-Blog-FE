@@ -8,7 +8,7 @@ export default function UnauthorizedPage() {
         Restricted Archive
       </h1>
       <p className="font-body-prose text-[17px] leading-[1.8] text-muted-foreground italic mb-8">
-        "This workspace belongs to the archivist.<br />The public pages remain open for reading."
+        &quot;This workspace belongs to the archivist.&quot;<br />The public pages remain open for reading.
       </p>
       <Link 
         href={ROUTES.HOME} 

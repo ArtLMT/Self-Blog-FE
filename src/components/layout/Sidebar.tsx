@@ -8,7 +8,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, FileText, Users, ArrowLeft, LogOut } from 'lucide-react';
+import { BookOpen, Users, ArrowLeft, LogOut } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
@@ -20,11 +20,7 @@ const sidebarLinks = [
     label: 'Workspace',
     icon: BookOpen,
   },
-  {
-    href: ROUTES.ADMIN.POSTS,
-    label: 'Posts',
-    icon: FileText,
-  },
+
   {
     href: ROUTES.ADMIN.USERS,
     label: 'Users',

@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { loginSchema, type LoginFormValues } from '@/lib/validators';
-import { useLoginMutation } from '@/features/auth/useAuthQueries';
+import { useLoginMutation } from '@/hooks/queries/useAuthQueries';
 import { ROUTES } from '@/lib/constants';
+import { useAuthStore } from '@/store/auth.store';
 
 /**
  * LoginForm Component
@@ -29,6 +30,7 @@ export function LoginForm() {
   });
 
   const loginMutation = useLoginMutation();
+  const authError = useAuthStore((state) => state.error);
 
   const onSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data);
@@ -39,7 +41,7 @@ export function LoginForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {loginMutation.error && (
           <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive font-body-prose">
-            Login failed. Please verify your credentials and try again.
+            {authError || 'Login failed. Please verify your credentials and try again.'}
           </div>
         )}
         <div className="space-y-2">

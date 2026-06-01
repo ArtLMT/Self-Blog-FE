@@ -2,35 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { 
+import {
   PenTool, 
   BookOpen, 
-  FileText, 
+  FileText,
   Plus, 
-  Trash2, 
   Edit3, 
   Clock, 
   ChevronDown, 
   ChevronRight, 
   Loader2, 
-  Globe, 
-  Lock, 
   CheckCircle,
-  Calendar,
   AlertCircle
 } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminArcsQuery } from '@/features/post/usePostQueries';
-import { ArcModal } from '@/features/post/components/ArcModal';
-import { ChapterModal } from '@/features/post/components/ChapterModal';
-import { EpisodeModal } from '@/features/post/components/EpisodeModal';
-import { ROUTES } from '@/lib/constants';
+import { useAdminArcsQuery } from '@/hooks/queries/useAdminQueries';
+import { ArcModal } from '@/components/admin/modals/ArcModal';
+import { ChapterModal } from '@/components/admin/modals/ChapterModal';
+import { EpisodeModal } from '@/components/admin/modals/EpisodeModal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import type { AdminArcResponseDTO, AdminChapterResponseDTO, AdminEpisodeResponseDTO } from '@/types/models';
 
 /**
  * AdminWorkspacePage Component
@@ -43,7 +37,7 @@ import { Separator } from '@/components/ui/separator';
  */
 export default function AdminWorkspacePage() {
   const router = useRouter();
-  const { user, isAdmin, isInitialized } = useAuth();
+  const { isAdmin, isInitialized } = useAuth();
   const { data: adminArcs = [], isLoading, isError, error } = useAdminArcsQuery();
 
   // Collapsible tree node state tracking
@@ -51,10 +45,10 @@ export default function AdminWorkspacePage() {
   const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
   // Modal states
-  type ModalState = { type: 'create' | 'edit'; target?: any; parentId?: string } | null;
-  const [arcModal, setArcModal] = useState<ModalState>(null);
-  const [chapterModal, setChapterModal] = useState<ModalState>(null);
-  const [episodeModal, setEpisodeModal] = useState<ModalState>(null);
+  type ModalState<T> = { type: 'create' | 'edit'; target?: T; parentId?: string } | null;
+  const [arcModal, setArcModal] = useState<ModalState<AdminArcResponseDTO>>(null);
+  const [chapterModal, setChapterModal] = useState<ModalState<AdminChapterResponseDTO>>(null);
+  const [episodeModal, setEpisodeModal] = useState<ModalState<AdminEpisodeResponseDTO>>(null);
 
   const toggleArc = (id: string) => {
     setExpandedArcs(prev => ({ ...prev, [id]: !prev[id] }));
@@ -132,7 +126,7 @@ export default function AdminWorkspacePage() {
       {/* Editorial Header */}
       <div>
         <h1 className="font-chapter-title text-4xl sm:text-5xl font-medium text-primary tracking-tight">
-          Archivist's Workspace
+          Archivist&apos;s Workspace
         </h1>
         <p className="font-body-prose text-muted-foreground italic mt-2">
           Curate, organize, and record entries in the digital ledger.

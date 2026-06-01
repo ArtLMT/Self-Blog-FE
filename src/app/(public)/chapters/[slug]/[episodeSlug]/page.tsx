@@ -189,14 +189,17 @@ export default async function EpisodeReaderPage(props: PageProps) {
 
 function romanize(num: number): string {
   if (isNaN(num)) return NaN.toString();
-  var digits = String(+num).split(""),
-      key = ["","I","II","III","IV","V","VI","VII","VIII","IX",
-             "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
-             "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"],
-      roman = "",
+  const digits = String(+num).split(""),
+        key = ["","I","II","III","IV","V","VI","VII","VIII","IX",
+               "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+               "","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"];
+  let roman = "",
       i = 3;
-  while (i--)
-      // @ts-ignore
-      roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+  while (i--) {
+      const popValue = digits.pop();
+      if (popValue !== undefined) {
+        roman = (key[+popValue + (i * 10)] || "") + roman;
+      }
+  }
   return Array(new Array(num + 1).join("M")).join("") + roman;
 }

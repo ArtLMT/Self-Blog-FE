@@ -24,7 +24,7 @@ export function handleFormError<TFieldValues extends FieldValues>(
           if (key === 'orderIndex') formField = 'displayOrder';
           if (key === 'summary') formField = 'content';
 
-          setError(formField as any, {
+          setError(formField as import('react-hook-form').Path<TFieldValues>, {
             type: 'server',
             message: message as string,
           });

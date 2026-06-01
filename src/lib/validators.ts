@@ -52,20 +52,4 @@ export const registerSchema = z
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
-/** Post form validation schema */
-export const postSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Title is required')
-    .max(200, 'Title must be at most 200 characters'),
-  content: z.string().min(1, 'Content is required'),
-  excerpt: z
-    .string()
-    .min(1, 'Excerpt is required')
-    .max(500, 'Excerpt must be at most 500 characters'),
-  coverImageUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
-  tags: z.array(z.string()).default([]),
-});
 
-export type PostFormValues = z.infer<typeof postSchema>;

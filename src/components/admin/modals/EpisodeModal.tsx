@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-import { episodeSchema, type EpisodeFormValues } from '../schemas';
-import { useCreateEpisodeMutation, useUpdateEpisodeMutation } from '../usePostQueries';
+import { episodeSchema, type EpisodeFormValues } from '@/lib/validators/content.schema';
+import { useCreateEpisodeMutation, useUpdateEpisodeMutation } from '@/hooks/queries/useAdminQueries';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,6 @@ export function EpisodeModal({ isOpen, onClose, chapterId, episode }: EpisodeMod
   });
 
   useEffect(() => {
-    setGlobalError(null);
     if (episode && isOpen) {
       form.reset({
         language: episode.language,
@@ -103,8 +102,13 @@ export function EpisodeModal({ isOpen, onClose, chapterId, episode }: EpisodeMod
     }
   };
 
+  const handleClose = () => {
+    setGlobalError(null);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       {/* Episode modal is wider — needs room for the content textarea */}
       <DialogContent
         showCloseButton={false}
@@ -113,7 +117,8 @@ export function EpisodeModal({ isOpen, onClose, chapterId, episode }: EpisodeMod
         {/* Header */}
         <div className="relative px-7 pt-7 pb-5 border-b border-border/30 shrink-0">
           <DialogClose
-            render={<button className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none" />}
+            onClick={handleClose}
+            className="absolute top-5 right-5 text-foreground/30 hover:text-foreground/70 transition-colors text-xl leading-none"
           >
             ×
           </DialogClose>
@@ -294,7 +299,7 @@ export function EpisodeModal({ isOpen, onClose, chapterId, episode }: EpisodeMod
 
         {/* Footer */}
         <div className="shrink-0 px-7 py-4 border-t border-border/30 flex justify-end gap-2 bg-muted/10">
-          <Button type="button" variant="ghost" size="sm" onClick={onClose} className="text-foreground/50">
+          <Button type="button" variant="ghost" size="sm" onClick={handleClose} className="text-foreground/50">
             Cancel
           </Button>
           <Button type="submit" form="episode-form" size="sm" disabled={isPending} className="min-w-[120px]">
